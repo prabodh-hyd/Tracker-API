@@ -16,6 +16,7 @@ const client = new Client(dbConfig);
 
 const userRoutes = require('./routes/users');
 const taskRoutes = require('./routes/tasks');
+const trackerRoutes = require('./routes/tracker');
 
 client.connect()
   .then(() => {
@@ -28,6 +29,7 @@ client.connect()
 app.use(express.json());
 app.use('/users', userRoutes);
 app.use('/tasks', taskRoutes);
+app.use('/tracker', trackerRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

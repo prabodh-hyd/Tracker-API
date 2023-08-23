@@ -16,11 +16,13 @@ client.connect();
 
 // Add a task
 router.post('/', async (req, res) => {
-  const { uid, task_name, task_description } = req.body;
+  const { uid, task_name, task_description} = req.body;
   const createdAtTimestamp = Math.floor(Date.now() / 1000);
+  const updatedAtTimestamp = createdAtTimestamp;
+  const status = 'OPEN';
 
   try {
-    const result = await client.query('INSERT INTO tasks (uid, task_name, task_description, created_at) VALUES ($1, $2, $3, $4) RETURNING *', [uid, task_name, task_description, createdAtTimestamp]);
+    const result = await client.query('INSERT INTO tasks (uid, task_name, task_description, created_at, updated_at, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [uid, task_name, task_description, createdAtTimestamp, updatedAtTimestamp, status]);
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error adding task:', error);
@@ -31,11 +33,11 @@ router.post('/', async (req, res) => {
 // Update task's name and description
 router.put('/:taskid', async (req, res) => {
   const { taskid } = req.params;
-  const { task_name, task_description } = req.body;
+  const { task_name, task_description, status } = req.body;
   const updatedAtTimestamp = Math.floor(Date.now() / 1000);
 
   try {
-    const result = await client.query('UPDATE tasks SET task_name = $1, task_description = $2, updated_at = $3 WHERE taskid = $4 RETURNING *', [task_name, task_description, updatedAtTimestamp, taskid]);
+    const result = await client.query('UPDATE tasks SET task_name = $1, task_description = $2, updated_at = $3, status = $4 WHERE taskid = $5 RETURNING *', [task_name, task_description, updatedAtTimestamp, status ,taskid]);
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error updating task:', error);
@@ -48,12 +50,17 @@ router.get('/:uid', async (req, res) => {
   const { uid } = req.params;
 
   try {
-    const result = await client.query('SELECT taskid, task_name, task_description FROM tasks WHERE uid = $1', [uid]);
+    const result = await client.query('SELECT taskid, task_name, task_description, status FROM tasks WHERE uid = $1', [uid]);
     res.json(result.rows);
   } catch (error) {
     console.error('Error getting tasks:', error);
     res.status(500).json({ error: 'An error occurred while getting the tasks.' });
   }
 });
+
+
+
+
+
 
 module.exports = router;

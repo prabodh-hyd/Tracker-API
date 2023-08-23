@@ -18,9 +18,11 @@ client.connect();
 router.post('/', async (req, res) => {
   const { name } = req.body;
   const createdAtTimestamp = Math.floor(Date.now() / 1000);
+  const updatedAtTimestamp = createdAtTimestamp;
+  const status = 'ACTIVE';
 
   try {
-    const result = await client.query('INSERT INTO users (name, created_at) VALUES ($1, $2) RETURNING *', [name, createdAtTimestamp]);
+    const result = await client.query('INSERT INTO users (name, created_at, updated_at, status) VALUES ($1, $2, $3, $4) RETURNING *', [name, createdAtTimestamp, updatedAtTimestamp, status]);
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error adding user:', error);
@@ -33,7 +35,7 @@ router.put('/:uid', async (req, res) => {
   const { uid } = req.params;
   const { name } = req.body;
   const updatedAtTimestamp = Math.floor(Date.now() / 1000);
-
+  
   try {
     const result = await client.query('UPDATE users SET name = $1, updated_at = $2 WHERE uid = $3 RETURNING *', [name, updatedAtTimestamp, uid]);
     res.json(result.rows[0]);
@@ -53,5 +55,6 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'An error occurred while getting the users.' });
   }
 });
+
 
 module.exports = router;
