@@ -14,6 +14,13 @@ const dbConfig = {
 const client = new Client(dbConfig);
 client.connect();
 
+/**
+ * @swagger
+ * tags:
+ *  name: Tasks
+ * description: Task management
+ */
+
 // Add a task
 router.post('/', async (req, res) => {
   const { uid, task_name, task_description} = req.body;
@@ -30,6 +37,74 @@ router.post('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /tasks:
+ *   post:
+ *     summary: Add a new task
+ *     tags:
+ *       - Tasks
+ *     requestBody:
+ *       description: Task data
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               uid:
+ *                 type: integer
+ *               task_name:
+ *                 type: string
+ *               task_description:
+ *                 type: string
+ *             example:
+ *               uid: 1
+ *               task_name: Example Task
+ *               task_description: This is an example task.
+ *     responses:
+ *       200:
+ *         description: Task added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 task_id:
+ *                   type: integer
+ *                 uid:
+ *                   type: integer
+ *                 task_name:
+ *                   type: string
+ *                 task_description:
+ *                   type: string
+ *                 created_at:
+ *                   type: integer
+ *                 updated_at:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *             example:
+ *               task_id: 1
+ *               uid: 1
+ *               task_name: Example Task
+ *               task_description: This is an example task.
+ *               created_at: 1677843540
+ *               updated_at: 1677843540
+ *               status: OPEN
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while adding the task.
+ */
+
 // Update task's name and description
 router.put('/:taskid', async (req, res) => {
   const { taskid } = req.params;
@@ -45,6 +120,76 @@ router.put('/:taskid', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /tasks/{taskid}:
+ *   put:
+ *     summary: Update a task
+ *     tags:
+ *       - Tasks
+ *     parameters:
+ *       - in: path
+ *         name: taskid
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Task ID
+ *     requestBody:
+ *       description: Updated task data
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               task_name:
+ *                 type: string
+ *               task_description:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *             example:
+ *               task_name: Updated Task
+ *               task_description: This is an updated task.
+ *               status: IN_PROGRESS
+ *     responses:
+ *       200:
+ *         description: Task updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 task_id:
+ *                   type: integer
+ *                 task_name:
+ *                   type: string
+ *                 task_description:
+ *                   type: string
+ *                 updated_at:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *             example:
+ *               task_id: 1
+ *               task_name: Updated Task
+ *               task_description: This is an updated task.
+ *               updated_at: 1677843540
+ *               status: IN_PROGRESS
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while updating the task.
+ */
+
+
 // Get tasks for a user
 router.get('/:uid', async (req, res) => {
   const { uid } = req.params;
@@ -58,7 +203,59 @@ router.get('/:uid', async (req, res) => {
   }
 });
 
-
+/**
+ * @swagger
+ * /tasks/{uid}:
+ *   get:
+ *     summary: Get tasks for a specific user
+ *     tags:
+ *       - Tasks
+ *     parameters:
+ *       - in: path
+ *         name: uid
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: List of tasks for the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   taskid:
+ *                     type: integer
+ *                   task_name:
+ *                     type: string
+ *                   task_description:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ *                 example:
+ *                   - taskid: 1
+ *                     task_name: Task 1
+ *                     task_description: Description for Task 1
+ *                     status: OPEN
+ *                   - taskid: 2
+ *                     task_name: Task 2
+ *                     task_description: Description for Task 2
+ *                     status: IN_PROGRESS
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while getting the tasks.
+ */
 
 
 

@@ -14,8 +14,14 @@ const dbConfig = {
 const client = new Client(dbConfig);
 client.connect();
 
-// add task_tracker entry when a user starts working on a task
+/**
+ * @swagger
+ * tags:
+ *  name: Tracker
+ * description: track tasks
+ */
 
+// add task_tracker entry when a user starts working on a task
 router.post('/', async (req, res) => {
     const { taskid } = req.body;
     const createdAtTimestamp = Math.floor(Date.now() / 1000);
@@ -30,6 +36,62 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: 'An error occurred while adding the tracker.' });
     }
 });
+
+/**
+ * @swagger
+ * /tracker:
+ *   post:
+ *     summary: Add a new tracker entry for a task
+ *     tags:
+ *       - Tracker
+ *     requestBody:
+ *       description: Tracker data
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               taskid:
+ *                 type: integer
+ *             example:
+ *               taskid: 1
+ *     responses:
+ *       200:
+ *         description: Tracker entry added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 tracker_id:
+ *                   type: integer
+ *                 taskid:
+ *                   type: integer
+ *                 hours:
+ *                   type: integer
+ *                 created_at:
+ *                   type: integer
+ *                 updated_at:
+ *                   type: integer
+ *             example:
+ *               tracker_id: 1
+ *               taskid: 1
+ *               hours: 0
+ *               created_at: 1677843540
+ *               updated_at: 1677843540
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while adding the tracker.
+ */
 
 // update tracker hours when a user updates a tracker
 router.put('/update/:tracker_id', async (req, res) => {
@@ -52,6 +114,57 @@ router.put('/update/:tracker_id', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /tracker/update/{tracker_id}:
+ *   put:
+ *     summary: Update tracker hours when a user updates a tracker
+ *     tags:
+ *       - Tracker
+ *     parameters:
+ *       - in: path
+ *         name: tracker_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Tracker ID
+ *     responses:
+ *       200:
+ *         description: Tracker hours updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 tracker_id:
+ *                   type: integer
+ *                 taskid:
+ *                   type: integer
+ *                 hours:
+ *                   type: integer
+ *                 created_at:
+ *                   type: integer
+ *                 updated_at:
+ *                   type: integer
+ *             example:
+ *               tracker_id: 1
+ *               taskid: 1
+ *               hours: 5
+ *               created_at: 1677843540
+ *               updated_at: 1677853540
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while updating the tracker.
+ */
+
 // get all trackers for a task
 router.get('/:taskid', async (req, res) => {
     const { taskid } = req.params;
@@ -65,6 +178,64 @@ router.get('/:taskid', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /tracker/{taskid}:
+ *   get:
+ *     summary: Get all trackers for a specific task
+ *     tags:
+ *       - Tracker
+ *     parameters:
+ *       - in: path
+ *         name: taskid
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Task ID
+ *     responses:
+ *       200:
+ *         description: List of trackers for the task
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   tracker_id:
+ *                     type: integer
+ *                   taskid:
+ *                     type: integer
+ *                   hours:
+ *                     type: integer
+ *                   created_at:
+ *                     type: integer
+ *                   updated_at:
+ *                     type: integer
+ *                 example:
+ *                   - tracker_id: 1
+ *                     taskid: 1
+ *                     hours: 5
+ *                     created_at: 1677843540
+ *                     updated_at: 1677853540
+ *                   - tracker_id: 2
+ *                     taskid: 1
+ *                     hours: 10
+ *                     created_at: 1677844540
+ *                     updated_at: 1677863540
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while getting the trackers.
+ */
+
 // get all trackers 
 router.get('/', async (req, res) => {
     try {
@@ -76,6 +247,55 @@ router.get('/', async (req, res) => {
     }
 });
 
-
+/**
+ * @swagger
+ * /tracker:
+ *   get:
+ *     summary: Get all trackers
+ *     tags:
+ *       - Tracker
+ *     responses:
+ *       200:
+ *         description: List of all trackers
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   tracker_id:
+ *                     type: integer
+ *                   taskid:
+ *                     type: integer
+ *                   hours:
+ *                     type: integer
+ *                   created_at:
+ *                     type: integer
+ *                   updated_at:
+ *                     type: integer
+ *                 example:
+ *                   - tracker_id: 1
+ *                     taskid: 1
+ *                     hours: 5
+ *                     created_at: 1677843540
+ *                     updated_at: 1677853540
+ *                   - tracker_id: 2
+ *                     taskid: 2
+ *                     hours: 10
+ *                     created_at: 1677844540
+ *                     updated_at: 1677863540
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while getting the trackers.
+ */
 
 module.exports = router;
