@@ -34,7 +34,12 @@ app.use('/users', userRoutes);
 app.use('/tasks', taskRoutes);
 app.use('/tracker', trackerRoutes);
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
