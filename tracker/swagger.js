@@ -8,13 +8,16 @@ const swaggerDefinition = {
         version: '1.0.0',
         description: 'API for the Tracker application',
     },
+    externalDocs: {
+        description: 'swagger.json',
+        url: '/swagger.json'
+    },
 };
 
 const options = {
     swaggerDefinition,
     apis: ['./routes/*.js'],
 };
-
 
 const swaggerSpec = swaggerJSDoc(options);
 

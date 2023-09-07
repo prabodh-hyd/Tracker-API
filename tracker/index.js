@@ -34,7 +34,12 @@ app.use('/mytime/users', userRoutes);
 app.use('/mytime/tasks', taskRoutes);
 app.use('/mytime/tracker', trackerRoutes);
 
-app.use('/mytime/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/mytime/swagger-ui', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
