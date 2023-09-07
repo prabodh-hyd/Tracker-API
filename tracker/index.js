@@ -30,11 +30,11 @@ client.connect()
   });
 
 app.use(express.json());
-app.use('/users', userRoutes);
-app.use('/tasks', taskRoutes);
-app.use('/tracker', trackerRoutes);
+app.use('/mytime/users', userRoutes);
+app.use('/mytime/tasks', taskRoutes);
+app.use('/mytime/tracker', trackerRoutes);
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/mytime/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
