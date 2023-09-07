@@ -116,7 +116,7 @@ router.put('/update/:tracker_id', async (req, res) => {
 
 /**
  * @swagger
- * /tracker/update/{tracker_id}:
+ * /mytime/tracker/update/{tracker_id}:
  *   put:
  *     summary: Update tracker hours when a user updates a tracker
  *     tags:
@@ -180,7 +180,7 @@ router.get('/:taskid', async (req, res) => {
 
 /**
  * @swagger
- * /tracker/{taskid}:
+ * /mytime/tracker/{taskid}:
  *   get:
  *     summary: Get all trackers for a specific task
  *     tags:
@@ -249,7 +249,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /tracker:
+ * /mytime/tracker:
  *   get:
  *     summary: Get all trackers
  *     tags:

@@ -27,7 +27,6 @@ router.post('/', async (req, res) => {
   const createdAtTimestamp = Math.floor(Date.now() / 1000);
   const updatedAtTimestamp = createdAtTimestamp;
   const status = 'ACTIVE';
-
   try {
     const result = await client.query('INSERT INTO users (name, created_at, updated_at, status) VALUES ($1, $2, $3, $4) RETURNING *', [name, createdAtTimestamp, updatedAtTimestamp, status]);
     res.json(result.rows[0]);
@@ -39,7 +38,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /users:
+ * /mytime/users:
  *   post:
  *     summary: Create a new user
  *     tags:
@@ -105,7 +104,7 @@ router.put('/:uid', async (req, res) => {
 
 /**
  * @swagger
- * /users/{uid}:
+ * /mytime/users/{uid}:
  *   put:
  *     summary: Update a user's name
  *     tags:
@@ -167,7 +166,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /users:
+ * /mytime/users:
  *     get:
  *       summary: Get all users
  *       tags: 
