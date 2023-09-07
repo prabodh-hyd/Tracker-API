@@ -8,10 +8,9 @@ const swaggerDefinition = {
         version: '1.0.0',
         description: 'API for the Tracker application',
     },
-    basepath: '/mytime',
     externalDocs: {
         description: 'swagger.json',
-        url: '/swagger.json'
+        url: '/mytime/swagger.json',
     },
 };
 
