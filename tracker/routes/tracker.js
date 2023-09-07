@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /tracker:
+ * /mytime/tracker:
  *   post:
  *     summary: Add a new tracker entry for a task
  *     tags:
