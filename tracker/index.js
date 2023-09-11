@@ -11,6 +11,13 @@ const port = process.env.PORT || 3000;
 const cors = require('cors');
 app.use(cors());
 
+const corsOptions = {
+  origin: 'process.env.CORS_ORIGIN',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  optionsSuccessStatus: 204
+};
+app.use(cors(corsOptions));
+
 const dbConfig = {
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
