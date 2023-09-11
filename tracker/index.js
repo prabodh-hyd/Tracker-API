@@ -12,7 +12,7 @@ const cors = require('cors');
 app.use(cors());
 
 const corsOptions = {
-  origin: 'process.env.CORS_ORIGIN',
+  origin: '*',
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   optionsSuccessStatus: 204
 };
