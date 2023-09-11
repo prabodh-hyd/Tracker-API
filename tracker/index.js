@@ -35,7 +35,7 @@ app.use('/mytime/tasks', taskRoutes);
 app.use('/mytime/tracker', trackerRoutes);
 
 app.use('/mytime/swagger-ui', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.get('/swagger.json', (req, res) => {
+app.get('/mytime/swagger.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerSpec);
 });

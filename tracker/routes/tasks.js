@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /tasks:
+ * /mytime/tasks:
  *   post:
  *     summary: Add a new task
  *     tags:
@@ -122,7 +122,7 @@ router.put('/:taskid', async (req, res) => {
 
 /**
  * @swagger
- * /tasks/{taskid}:
+ * /mytime/tasks/{taskid}:
  *   put:
  *     summary: Update a task
  *     tags:
@@ -205,7 +205,7 @@ router.get('/:uid', async (req, res) => {
 
 /**
  * @swagger
- * /tasks/{uid}:
+ * /mytime/tasks/{uid}:
  *   get:
  *     summary: Get tasks for a specific user
  *     tags:
