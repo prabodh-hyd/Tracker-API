@@ -96,18 +96,11 @@ router.post('/', async (req, res) => {
 // update tracker hours when a user updates a tracker
 router.put('/update/:tracker_id', async (req, res) => {
     const { tracker_id } = req.params;
-    const updatedAtTimestamp = Math.floor(Date.now() / 1000);
+    const { hours } = req.body; 
 
     try {
-        const result = await client.query('UPDATE task_tracker SET updated_at = $1 WHERE tracker_id = $2 RETURNING *', [updatedAtTimestamp, tracker_id]);
-        // calculate hours
-        const result2 = await client.query('SELECT * FROM task_tracker WHERE tracker_id = $1', [tracker_id]);
-        const tracker = result2.rows[0];
-        const createdAtTimestamp = tracker.created_at;
-        const hours = Math.floor((updatedAtTimestamp - createdAtTimestamp) / 3600);
-        // update hours
-        const result3 = await client.query('UPDATE task_tracker SET hours = $1 WHERE tracker_id = $2 RETURNING *', [hours, tracker_id]);
-        res.json(result3.rows[0]);
+        const result = await client.query('UPDATE task_tracker SET hours = $1 WHERE tracker_id = $2 RETURNING tracker_id, taskid, hours', [hours, tracker_id]);
+        res.json(result.rows[0]);
     } catch (error) {
         console.error('Error updating tracker:', error);
         res.status(500).json({ error: 'An error occurred while updating the tracker.' });
@@ -128,6 +121,17 @@ router.put('/update/:tracker_id', async (req, res) => {
  *         schema:
  *           type: integer
  *         description: Tracker ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               hours:
+ *                 type: integer
+ *             example:
+ *               hours: 5
  *     responses:
  *       200:
  *         description: Tracker hours updated successfully
@@ -142,16 +146,11 @@ router.put('/update/:tracker_id', async (req, res) => {
  *                   type: integer
  *                 hours:
  *                   type: integer
- *                 created_at:
- *                   type: integer
- *                 updated_at:
- *                   type: integer
+ *    
  *             example:
  *               tracker_id: 1
  *               taskid: 1
  *               hours: 5
- *               created_at: 1677843540
- *               updated_at: 1677853540
  *       500:
  *         description: Internal server error
  *         content:
@@ -164,6 +163,7 @@ router.put('/update/:tracker_id', async (req, res) => {
  *             example:
  *               error: An error occurred while updating the tracker.
  */
+
 
 // get all trackers for a task
 router.get('/:taskid', async (req, res) => {
