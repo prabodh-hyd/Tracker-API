@@ -298,4 +298,59 @@ router.get('/', async (req, res) => {
  *               error: An error occurred while getting the trackers.
  */
 
+// get the total hours taken for a task
+router.get('/total-hours/:taskid', async (req, res) => {
+    const { taskid } = req.params;
+
+    try {
+        const result = await client.query('SELECT SUM(hours) as total_hours FROM task_tracker WHERE taskid = $1', [taskid]);
+        const totalHours = result.rows[0].total_hours || 0; // If there are no trackers, default to 0 hours
+        res.json({ total_hours: totalHours });
+    } catch (error) {
+        console.error('Error getting total hours for the task:', error);
+        res.status(500).json({ error: 'An error occurred while calculating the total hours.' });
+    }
+});
+
+/**
+ * @swagger
+ * /mytime/tracker/total-hours/{taskid}:
+ *   get:
+ *     summary: Get the total hours taken for a task
+ *     tags:
+ *       - Tracker
+ *     parameters:
+ *       - in: path
+ *         name: taskid
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Task ID
+ *     responses:
+ *       200:
+ *         description: Total hours calculated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total_hours:
+ *                   type: integer
+ *             example:
+ *               total_hours: 15
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while calculating the total hours.
+ */
+
+
+
 module.exports = router;
