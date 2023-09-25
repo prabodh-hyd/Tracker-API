@@ -257,6 +257,110 @@ router.get('/:uid', async (req, res) => {
  *               error: An error occurred while getting the tasks.
  */
 
+// Update task to CLOSED status
+router.put('/:taskid/close', async (req, res) => {
+  const { taskid } = req.params;
+  const updatedAtTimestamp = Math.floor(Date.now() / 1000);
+  const newStatus = 'CLOSED';
+
+  try {
+    const result = await client.query('UPDATE tasks SET updated_at = $1, status = $2 WHERE taskid = $3 RETURNING *', [updatedAtTimestamp, newStatus, taskid]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found.' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating task to CLOSED status:', error);
+    res.status(500).json({ error: 'An error occurred while updating the task status.' });
+  }
+});
+
+/**
+ * @swagger
+ * /mytime/tasks/{taskid}/close:
+ *   put:
+ *     summary: Update a task to CLOSED status
+ *     tags:
+ *       - Tasks
+ *     parameters:
+ *       - in: path
+ *         name: taskid
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Task ID
+ *     requestBody:
+ *       description: Request body to close the task
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *             example:
+ *               status: CLOSED
+ *     responses:
+ *       200:
+ *         description: Task updated to CLOSED status successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 task_id:
+ *                   type: integer
+ *                 task_name:
+ *                   type: string
+ *                 task_description:
+ *                   type: string
+ *                 updated_at:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *             example:
+ *               task_id: 1
+ *               task_name: Task 1
+ *               task_description: Description for Task 1
+ *               updated_at: 1677843540
+ *               status: CLOSED
+ *       400:
+ *         description: Bad request, task is already CLOSED
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: Task is already closed.
+ *       404:
+ *         description: Task not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: Task not found.
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while updating the task status.
+ */
 
 
 
