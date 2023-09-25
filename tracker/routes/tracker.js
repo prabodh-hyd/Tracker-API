@@ -21,14 +21,26 @@ client.connect();
  * description: track tasks
  */
 
+
 // add task_tracker entry when a user starts working on a task
 router.post('/', async (req, res) => {
-    const { taskid } = req.body;
+    const { taskid, hours } = req.body;
     const createdAtTimestamp = Math.floor(Date.now() / 1000);
     const updatedAtTimestamp = createdAtTimestamp;
-    const hours = 0;
 
     try {
+        // Check if the task exists and is not closed
+        const taskResult = await client.query('SELECT status FROM tasks WHERE taskid = $1', [taskid]);
+        if (taskResult.rows.length === 0) {
+            return res.status(400).json({ error: 'Task not found.' });
+        }
+
+        const taskStatus = taskResult.rows[0].status;
+        if (taskStatus === 'CLOSED') {
+            return res.status(400).json({ error: 'Cannot add a tracker to a closed task.' });
+        }
+
+        // If the task is not closed, add the tracker
         const result = await client.query('INSERT INTO task_tracker(taskid, hours, created_at, updated_at) VALUES ($1, $2, $3, $4) RETURNING *', [taskid, hours, createdAtTimestamp, updatedAtTimestamp]);
         res.json(result.rows[0]);
     } catch (error) {
@@ -41,11 +53,11 @@ router.post('/', async (req, res) => {
  * @swagger
  * /mytime/tracker:
  *   post:
- *     summary: Add a new tracker entry for a task
+ *     summary: Add a new tracker entry when a user starts working on a task
  *     tags:
  *       - Tracker
  *     requestBody:
- *       description: Tracker data
+ *       description: Data for creating a new tracker entry
  *       required: true
  *       content:
  *         application/json:
@@ -54,8 +66,11 @@ router.post('/', async (req, res) => {
  *             properties:
  *               taskid:
  *                 type: integer
+ *               hours:
+ *                 type: integer
  *             example:
  *               taskid: 1
+ *               hours: 2  
  *     responses:
  *       200:
  *         description: Tracker entry added successfully
@@ -77,11 +92,22 @@ router.post('/', async (req, res) => {
  *             example:
  *               tracker_id: 1
  *               taskid: 1
- *               hours: 0
+ *               hours: 2
  *               created_at: 1677843540
  *               updated_at: 1677843540
+ *       400:
+ *         description: Bad Request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: Task not found or Cannot add a tracker to a closed task
  *       500:
- *         description: Internal server error
+ *         description: Internal Server Error
  *         content:
  *           application/json:
  *             schema:
@@ -93,13 +119,14 @@ router.post('/', async (req, res) => {
  *               error: An error occurred while adding the tracker.
  */
 
-// update tracker hours when a user updates a tracker
+// Update tracker hours and set updated_at timestamp when a user updates a tracker
 router.put('/update/:tracker_id', async (req, res) => {
     const { tracker_id } = req.params;
     const { hours } = req.body; 
+    const updated_at = Math.floor(Date.now() / 1000); // Updated timestamp
 
     try {
-        const result = await client.query('UPDATE task_tracker SET hours = $1 WHERE tracker_id = $2 RETURNING tracker_id, taskid, hours', [hours, tracker_id]);
+        const result = await client.query('UPDATE task_tracker SET hours = $1, updated_at = $2 WHERE tracker_id = $3 RETURNING tracker_id, taskid, hours, updated_at', [hours, updated_at, tracker_id]);
         res.json(result.rows[0]);
     } catch (error) {
         console.error('Error updating tracker:', error);
@@ -107,11 +134,12 @@ router.put('/update/:tracker_id', async (req, res) => {
     }
 });
 
+
 /**
  * @swagger
  * /mytime/tracker/update/{tracker_id}:
  *   put:
- *     summary: Update tracker hours when a user updates a tracker
+ *     summary: Update tracker hours and timestamp when a user updates a tracker
  *     tags:
  *       - Tracker
  *     parameters:
@@ -134,7 +162,7 @@ router.put('/update/:tracker_id', async (req, res) => {
  *               hours: 5
  *     responses:
  *       200:
- *         description: Tracker hours updated successfully
+ *         description: Tracker hours and timestamp updated successfully
  *         content:
  *           application/json:
  *             schema:
@@ -146,11 +174,13 @@ router.put('/update/:tracker_id', async (req, res) => {
  *                   type: integer
  *                 hours:
  *                   type: integer
- *    
+ *                 updated_at:
+ *                   type: integer
  *             example:
  *               tracker_id: 1
  *               taskid: 1
  *               hours: 5
+ *               updated_at: 1677843540
  *       500:
  *         description: Internal server error
  *         content:
