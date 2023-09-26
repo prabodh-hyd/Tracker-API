@@ -382,6 +382,76 @@ router.get('/total-hours/:taskid', async (req, res) => {
  *               error: An error occurred while calculating the total hours.
  */
 
+// Delete a tracker by tracker ID
+router.delete('/delete/:tracker_id', async (req, res) => {
+    const { tracker_id } = req.params;
+
+    try {
+        // Check if the tracker exists
+        const trackerResult = await client.query('SELECT * FROM task_tracker WHERE tracker_id = $1', [tracker_id]);
+        if (trackerResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Tracker not found.' });
+        }
+
+        // Delete the tracker
+        await client.query('DELETE FROM task_tracker WHERE tracker_id = $1', [tracker_id]);
+
+        res.status(200).json({ message: 'Tracker deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting tracker:', error);
+        res.status(500).json({ error: 'An error occurred while deleting the tracker.' });
+    }
+});
+
+/**
+ * @swagger
+ * /mytime/tracker/delete/{tracker_id}:
+ *   delete:
+ *     summary: Delete a tracker by tracker ID
+ *     tags:
+ *       - Tracker
+ *     parameters:
+ *       - in: path
+ *         name: tracker_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Tracker ID to delete
+ *     responses:
+ *       200:
+ *         description: Tracker deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             example:
+ *               message: Tracker deleted successfully.
+ *       404:
+ *         description: Tracker not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: Tracker not found.
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while deleting the tracker.
+ */
 
 
 module.exports = router;
