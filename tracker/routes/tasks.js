@@ -195,7 +195,7 @@ router.get('/:uid', async (req, res) => {
   const { uid } = req.params;
 
   try {
-    const result = await client.query('SELECT taskid, task_name, task_description, status FROM tasks WHERE uid = $1', [uid]);
+    const result = await client.query('SELECT taskid, task_name, task_description, status FROM tasks WHERE uid = $1 ORDER BY taskid ASC', [uid]);
     res.json(result.rows);
   } catch (error) {
     console.error('Error getting tasks:', error);
