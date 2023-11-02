@@ -200,7 +200,7 @@ router.get('/:taskid', async (req, res) => {
     const { taskid } = req.params;
 
     try {
-        const result = await client.query('SELECT * FROM task_tracker WHERE taskid = $1', [taskid]);
+        const result = await client.query('SELECT * FROM task_tracker WHERE taskid = $1 ORDER BY tracker_id ASC', [taskid]);
         res.json(result.rows);
     } catch (error) {
         console.error('Error getting trackers:', error);
@@ -269,7 +269,7 @@ router.get('/:taskid', async (req, res) => {
 // get all trackers 
 router.get('/', async (req, res) => {
     try {
-        const result = await client.query('SELECT * FROM task_tracker');
+        const result = await client.query('SELECT * FROM task_tracker ORDER BY tracker_id ASC');
         res.json(result.rows);
     } catch (error) {
         console.error('Error getting trackers:', error);
