@@ -23,12 +23,23 @@ client.connect();
 
 // add task_tracker entry when a user starts working on a task
 router.post('/', async (req, res) => {
-    const { taskid } = req.body;
+    const { taskid, hours } = req.body;
     const createdAtTimestamp = Math.floor(Date.now() / 1000);
     const updatedAtTimestamp = createdAtTimestamp;
-    const hours = 0;
 
     try {
+        // Check if the task exists and is not closed
+        const taskResult = await client.query('SELECT status FROM tasks WHERE taskid = $1', [taskid]);
+        if (taskResult.rows.length === 0) {
+            return res.status(400).json({ error: 'Task not found.' });
+        }
+
+        const taskStatus = taskResult.rows[0].status;
+        if (taskStatus === 'CLOSED') {
+            return res.status(400).json({ error: 'Cannot add a tracker to a closed task.' });
+        }
+
+        // If the task is not closed, add the tracker
         const result = await client.query('INSERT INTO task_tracker(taskid, hours, created_at, updated_at) VALUES ($1, $2, $3, $4) RETURNING *', [taskid, hours, createdAtTimestamp, updatedAtTimestamp]);
         res.json(result.rows[0]);
     } catch (error) {
@@ -41,11 +52,11 @@ router.post('/', async (req, res) => {
  * @swagger
  * /mytime/tracker:
  *   post:
- *     summary: Add a new tracker entry for a task
+ *     summary: Add a new tracker entry when a user starts working on a task
  *     tags:
  *       - Tracker
  *     requestBody:
- *       description: Tracker data
+ *       description: Data for creating a new tracker entry
  *       required: true
  *       content:
  *         application/json:
@@ -54,8 +65,11 @@ router.post('/', async (req, res) => {
  *             properties:
  *               taskid:
  *                 type: integer
+ *               hours:
+ *                 type: integer
  *             example:
  *               taskid: 1
+ *               hours: 2  
  *     responses:
  *       200:
  *         description: Tracker entry added successfully
@@ -77,11 +91,22 @@ router.post('/', async (req, res) => {
  *             example:
  *               tracker_id: 1
  *               taskid: 1
- *               hours: 0
+ *               hours: 2
  *               created_at: 1677843540
  *               updated_at: 1677843540
+ *       400:
+ *         description: Bad Request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: Task not found or Cannot add a tracker to a closed task
  *       500:
- *         description: Internal server error
+ *         description: Internal Server Error
  *         content:
  *           application/json:
  *             schema:
@@ -93,32 +118,30 @@ router.post('/', async (req, res) => {
  *               error: An error occurred while adding the tracker.
  */
 
-// update tracker hours when a user updates a tracker
+// Update tracker hours and set to PAUSED
 router.put('/update/:tracker_id', async (req, res) => {
     const { tracker_id } = req.params;
-    const updatedAtTimestamp = Math.floor(Date.now() / 1000);
+    const { hours } = req.body;
+    const updated_at = Math.floor(Date.now() / 1000); // Updated timestamp
 
     try {
-        const result = await client.query('UPDATE task_tracker SET updated_at = $1 WHERE tracker_id = $2 RETURNING *', [updatedAtTimestamp, tracker_id]);
-        // calculate hours
-        const result2 = await client.query('SELECT * FROM task_tracker WHERE tracker_id = $1', [tracker_id]);
-        const tracker = result2.rows[0];
-        const createdAtTimestamp = tracker.created_at;
-        const hours = Math.floor((updatedAtTimestamp - createdAtTimestamp) / 3600);
-        // update hours
-        const result3 = await client.query('UPDATE task_tracker SET hours = $1 WHERE tracker_id = $2 RETURNING *', [hours, tracker_id]);
-        res.json(result3.rows[0]);
+        // Update the hours in the Tracker Table
+        const resultTracker = await client.query('UPDATE task_tracker SET hours = $1, updated_at = $2 WHERE tracker_id = $3 RETURNING tracker_id, taskid, hours, updated_at', [hours, updated_at, tracker_id]);
+
+        // Update the status in the Tasks Table to 'PAUSED'
+        await client.query('UPDATE tasks SET status = $1 WHERE taskid = $2', ['PAUSED', resultTracker.rows[0].taskid]);
+
+        res.json(resultTracker.rows[0]);
     } catch (error) {
-        console.error('Error updating tracker:', error);
-        res.status(500).json({ error: 'An error occurred while updating the tracker.' });
+        console.error('Error updating tracker and task status:', error);
+        res.status(500).json({ error: 'An error occurred while updating the tracker and task status.' });
     }
 });
-
 /**
  * @swagger
  * /mytime/tracker/update/{tracker_id}:
  *   put:
- *     summary: Update tracker hours when a user updates a tracker
+ *     summary: Update tracker hours and timestamp when a user updates a tracker
  *     tags:
  *       - Tracker
  *     parameters:
@@ -128,9 +151,20 @@ router.put('/update/:tracker_id', async (req, res) => {
  *         schema:
  *           type: integer
  *         description: Tracker ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               hours:
+ *                 type: integer
+ *             example:
+ *               hours: 5
  *     responses:
  *       200:
- *         description: Tracker hours updated successfully
+ *         description: Tracker hours and timestamp updated successfully
  *         content:
  *           application/json:
  *             schema:
@@ -142,16 +176,13 @@ router.put('/update/:tracker_id', async (req, res) => {
  *                   type: integer
  *                 hours:
  *                   type: integer
- *                 created_at:
- *                   type: integer
  *                 updated_at:
  *                   type: integer
  *             example:
  *               tracker_id: 1
  *               taskid: 1
  *               hours: 5
- *               created_at: 1677843540
- *               updated_at: 1677853540
+ *               updated_at: 1677843540
  *       500:
  *         description: Internal server error
  *         content:
@@ -165,12 +196,13 @@ router.put('/update/:tracker_id', async (req, res) => {
  *               error: An error occurred while updating the tracker.
  */
 
+
 // get all trackers for a task
 router.get('/:taskid', async (req, res) => {
     const { taskid } = req.params;
 
     try {
-        const result = await client.query('SELECT * FROM task_tracker WHERE taskid = $1', [taskid]);
+        const result = await client.query('SELECT * FROM task_tracker WHERE taskid = $1 ORDER BY tracker_id ASC', [taskid]);
         res.json(result.rows);
     } catch (error) {
         console.error('Error getting trackers:', error);
@@ -239,7 +271,7 @@ router.get('/:taskid', async (req, res) => {
 // get all trackers 
 router.get('/', async (req, res) => {
     try {
-        const result = await client.query('SELECT * FROM task_tracker');
+        const result = await client.query('SELECT * FROM task_tracker ORDER BY tracker_id ASC');
         res.json(result.rows);
     } catch (error) {
         console.error('Error getting trackers:', error);
@@ -297,5 +329,159 @@ router.get('/', async (req, res) => {
  *             example:
  *               error: An error occurred while getting the trackers.
  */
+
+
+// get the total hours taken for a task
+router.get('/total-hours/:taskid', async (req, res) => {
+    const { taskid } = req.params;
+
+    try {
+        const result = await client.query('SELECT SUM(hours) as total_hours FROM task_tracker WHERE taskid = $1', [taskid]);
+        const totalHours = result.rows[0].total_hours || 0; // If there are no trackers, default to 0 hours
+        res.json({ total_hours: totalHours });
+    } catch (error) {
+        console.error('Error getting total hours for the task:', error);
+        res.status(500).json({ error: 'An error occurred while calculating the total hours.' });
+    }
+});
+
+/**
+ * @swagger
+ * /mytime/tracker/total-hours/{taskid}:
+ *   get:
+ *     summary: Get the total hours taken for a task
+ *     tags:
+ *       - Tracker
+ *     parameters:
+ *       - in: path
+ *         name: taskid
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Task ID
+ *     responses:
+ *       200:
+ *         description: Total hours calculated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total_hours:
+ *                   type: integer
+ *             example:
+ *               total_hours: 15
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while calculating the total hours.
+ */
+
+// Delete a tracker by tracker ID
+router.delete('/delete/:tracker_id', async (req, res) => {
+    const { tracker_id } = req.params;
+
+    try {
+        // Check if the tracker exists
+        const trackerResult = await client.query('SELECT * FROM task_tracker WHERE tracker_id = $1', [tracker_id]);
+        if (trackerResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Tracker not found.' });
+        }
+
+        // Delete the tracker
+        await client.query('DELETE FROM task_tracker WHERE tracker_id = $1', [tracker_id]);
+
+        res.status(200).json({ message: 'Tracker deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting tracker:', error);
+        res.status(500).json({ error: 'An error occurred while deleting the tracker.' });
+    }
+});
+
+/**
+ * @swagger
+ * /mytime/tracker/delete/{tracker_id}:
+ *   delete:
+ *     summary: Delete a tracker by tracker ID
+ *     tags:
+ *       - Tracker
+ *     parameters:
+ *       - in: path
+ *         name: tracker_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Tracker ID to delete
+ *     responses:
+ *       200:
+ *         description: Tracker deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             example:
+ *               message: Tracker deleted successfully.
+ *       404:
+ *         description: Tracker not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: Tracker not found.
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while deleting the tracker.
+ */
+
+// get total hours for all tasks in a particular month
+
+router.get('/total-hours/:month/:year', async (req, res) => {
+    const { month, year } = req.params;
+
+    try {
+        const result = await client.query('SELECT SUM(hours) as total_hours FROM task_tracker WHERE EXTRACT(MONTH FROM TO_TIMESTAMP(created_at)) = $1 AND EXTRACT(YEAR FROM TO_TIMESTAMP(created_at)) = $2', [month, year]);
+        const totalHours = result.rows[0].total_hours || 0; // If there are no trackers, default to 0 hours
+        res.json({ total_hours: totalHours });
+    } catch (error) {
+        console.error('Error getting total hours for the month:', error);
+        res.status(500).json({ error: 'An error occurred while calculating the total hours.' });
+    }
+});
+
+// get total hours for a task in a particular month and week and day
+router.get('/total-hours/:taskid/:month/:year', async (req, res) => {
+    const { taskid, month, year } = req.params;
+
+    try {
+        const result = await client.query('SELECT SUM(hours) as total_hours FROM task_tracker WHERE taskid = $1 AND EXTRACT(MONTH FROM TO_TIMESTAMP(created_at)) = $2 AND EXTRACT(YEAR FROM TO_TIMESTAMP(created_at)) = $3', [taskid, month, year]);
+        const totalHours = result.rows[0].total_hours || 0; // If there are no trackers, default to 0 hours
+        res.json({ total_hours: totalHours });
+    } catch (error) {
+        console.error('Error getting total hours for the month:', error);
+        res.status(500).json({ error: 'An error occurred while calculating the total hours.' });
+    }
+});
 
 module.exports = router;
