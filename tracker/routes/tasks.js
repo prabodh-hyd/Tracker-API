@@ -507,5 +507,76 @@ router.delete('/:taskid', async (req, res) => {
  */
 
 
+// Delete a task by task ID
+router.delete('/:taskid', async (req, res) => {
+  const { taskid } = req.params;
+
+  try {
+      // Check if the task exists
+      const taskResult = await client.query('SELECT * FROM tasks WHERE taskid = $1', [taskid]);
+      if (taskResult.rows.length === 0) {
+          return res.status(404).json({ error: 'Task not found.' });
+      }
+
+      // Delete the task
+      await client.query('DELETE FROM tasks WHERE taskid = $1', [taskid]);
+
+      res.status(200).json({ message: 'Task deleted successfully.' });
+  } catch (error) {
+      console.error('Error deleting task:', error);
+      res.status(500).json({ error: 'An error occurred while deleting the task.' });
+  }
+});
+
+/**
+ * @swagger
+ * /mytime/tasks/{taskid}:
+ *   delete:
+ *     summary: Delete a task by task ID
+ *     tags:
+ *       - Tasks
+ *     parameters:
+ *       - in: path
+ *         name: taskid
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Task ID to delete
+ *     responses:
+ *       200:
+ *         description: Task deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             example:
+ *               message: Task deleted successfully.
+ *       404:
+ *         description: Task not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: Task not found.
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while deleting the task.
+ */
+
 
 module.exports = router;
