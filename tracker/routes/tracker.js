@@ -464,4 +464,51 @@ router.get('/total-hours/:month/:year', async (req, res) => {
         res.status(500).json({ error: 'An error occurred while calculating the total hours.' });
     }
 });
+
+/**
+ * @swagger
+ * /mytime/tracker/total-hours/{month}/{year}:
+ *   get:
+ *     summary: Get total hours for all tasks in a particular month
+ *     tags:
+ *       - Tracker
+ *     parameters:
+ *       - in: path
+ *         name: month
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Month (1-12)
+ *       - in: path
+ *         name: year
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Year (e.g., 2023)
+ *     responses:
+ *       200:
+ *         description: Total hours calculated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total_hours:
+ *                   type: integer
+ *             example:
+ *               total_hours: 45
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: An error occurred while calculating the total hours.
+ */
+
+
 module.exports = router;
