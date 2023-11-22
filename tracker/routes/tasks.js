@@ -330,14 +330,14 @@ router.get('/:uid', async (req, res) => {
  *               error: An error occurred while getting the tasks.
  */
 
-// Update task to CLOSED status
-router.put('/:taskid/close', async (req, res) => {
+// Update task status
+router.put('/:taskid/update-status', async (req, res) => {
   const { taskid } = req.params;
+  const { status } = req.body;
   const updatedAtTimestamp = Math.floor(Date.now() / 1000);
-  const newStatus = 'CLOSED';
 
   try {
-    const result = await client.query('UPDATE tasks SET updated_at = $1, status = $2 WHERE taskid = $3 RETURNING *', [updatedAtTimestamp, newStatus, taskid]);
+    const result = await client.query('UPDATE tasks SET updated_at = $1, status = $2 WHERE taskid = $3 RETURNING *', [updatedAtTimestamp, status, taskid]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Task not found.' });
@@ -345,16 +345,16 @@ router.put('/:taskid/close', async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error updating task to CLOSED status:', error);
-    res.status(500).json({ error: 'An error occurred while updating the task status.' });
+    console.error(`Error updating task to ${status} status:`, error);
+    res.status(500).json({ error: `An error occurred while updating the task status to ${status}.` });
   }
 });
 
 /**
  * @swagger
- * /mytime/tasks/{taskid}/close:
+ * /mytime/tasks/{taskid}/update-status:
  *   put:
- *     summary: Update a task to CLOSED status
+ *     summary: Update a task status
  *     tags:
  *       - Tasks
  *     parameters:
@@ -365,7 +365,7 @@ router.put('/:taskid/close', async (req, res) => {
  *           type: integer
  *         description: Task ID
  *     requestBody:
- *       description: Request body to close the task
+ *       description: Request body to update the task status
  *       required: true
  *       content:
  *         application/json:
@@ -375,10 +375,10 @@ router.put('/:taskid/close', async (req, res) => {
  *               status:
  *                 type: string
  *             example:
- *               status: CLOSED
+ *               status: IN_PROGRESS
  *     responses:
  *       200:
- *         description: Task updated to CLOSED status successfully
+ *         description: Task status updated successfully
  *         content:
  *           application/json:
  *             schema:
@@ -399,18 +399,7 @@ router.put('/:taskid/close', async (req, res) => {
  *               task_name: Task 1
  *               task_description: Description for Task 1
  *               updated_at: 1677843540
- *               status: CLOSED
- *       400:
- *         description: Bad request, task is already CLOSED
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *             example:
- *               error: Task is already closed.
+ *               status: IN_PROGRESS
  *       404:
  *         description: Task not found
  *         content:

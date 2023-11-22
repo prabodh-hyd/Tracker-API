@@ -118,25 +118,21 @@ router.post('/', async (req, res) => {
  *               error: An error occurred while adding the tracker.
  */
 
-// Update tracker hours and set to PAUSED
+// Update tracker hours
 router.put('/update/:tracker_id', async (req, res) => {
     const { tracker_id } = req.params;
-    const { hours } = req.body;
+    const { hours } = req.body; 
     const updated_at = Math.floor(Date.now() / 1000); // Updated timestamp
 
     try {
-        // Update the hours in the Tracker Table
-        const resultTracker = await client.query('UPDATE task_tracker SET hours = $1, updated_at = $2 WHERE tracker_id = $3 RETURNING tracker_id, taskid, hours, updated_at', [hours, updated_at, tracker_id]);
-
-        // Update the status in the Tasks Table to 'PAUSED'
-        await client.query('UPDATE tasks SET status = $1 WHERE taskid = $2', ['PAUSED', resultTracker.rows[0].taskid]);
-
-        res.json(resultTracker.rows[0]);
+        const result = await client.query('UPDATE task_tracker SET hours = $1, updated_at = $2 WHERE tracker_id = $3 RETURNING tracker_id, taskid, hours, updated_at', [hours, updated_at, tracker_id]);
+        res.json(result.rows[0]);
     } catch (error) {
-        console.error('Error updating tracker and task status:', error);
-        res.status(500).json({ error: 'An error occurred while updating the tracker and task status.' });
+        console.error('Error updating tracker:', error);
+        res.status(500).json({ error: 'An error occurred while updating the tracker.' });
     }
 });
+
 /**
  * @swagger
  * /mytime/tracker/update/{tracker_id}:
@@ -195,7 +191,6 @@ router.put('/update/:tracker_id', async (req, res) => {
  *             example:
  *               error: An error occurred while updating the tracker.
  */
-
 
 // get all trackers for a task
 router.get('/:taskid', async (req, res) => {
