@@ -464,19 +464,4 @@ router.get('/total-hours/:month/:year', async (req, res) => {
         res.status(500).json({ error: 'An error occurred while calculating the total hours.' });
     }
 });
-
-// get total hours for a task in a particular month and week and day
-router.get('/total-hours/:taskid/:month/:year', async (req, res) => {
-    const { taskid, month, year } = req.params;
-
-    try {
-        const result = await client.query('SELECT SUM(hours) as total_hours FROM task_tracker WHERE taskid = $1 AND EXTRACT(MONTH FROM TO_TIMESTAMP(created_at)) = $2 AND EXTRACT(YEAR FROM TO_TIMESTAMP(created_at)) = $3', [taskid, month, year]);
-        const totalHours = result.rows[0].total_hours || 0; // If there are no trackers, default to 0 hours
-        res.json({ total_hours: totalHours });
-    } catch (error) {
-        console.error('Error getting total hours for the month:', error);
-        res.status(500).json({ error: 'An error occurred while calculating the total hours.' });
-    }
-});
-
 module.exports = router;
