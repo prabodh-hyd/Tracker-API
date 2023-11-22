@@ -3,7 +3,7 @@ const router = express.Router();
 const { Client } = require('pg');
 require('dotenv').config();
 
-const cron = require('node-cron');
+// const cron = require('node-cron');
 
 const dbConfig = {
     user: process.env.DB_USER,
@@ -107,7 +107,7 @@ router.post('/', async (req, res) => {
  *               error: An error occurred while adding the task.
  */
 
-
+// Update Task name, description and status
 router.put('/:taskid', async (req, res) => {
   const { taskid } = req.params;
   const { task_name, task_description, status } = req.body;
