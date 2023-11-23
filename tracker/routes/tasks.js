@@ -23,14 +23,26 @@ client.connect();
  * description: Task management
  */
 
-// Add a task
+// Add a task using username
 router.post('/', async (req, res) => {
-  const { uid, task_name, task_description} = req.body;
+  const { username, task_name, task_description } = req.body;
   const createdAtTimestamp = Math.floor(Date.now() / 1000);
   const updatedAtTimestamp = createdAtTimestamp;
   const status = 'OPEN';
 
   try {
+    // Retrieve the user ID based on the username
+    const userQuery = await client.query('SELECT uid FROM users WHERE name = $1', [username]);
+
+    // Check if the username exists
+    if (userQuery.rows.length === 0) {
+      res.status(404).json({ error: 'Username not found.' });
+      return;
+    }
+
+    const uid = userQuery.rows[0].uid;
+
+    // Insert the task with the retrieved user ID
     const result = await client.query('INSERT INTO tasks (uid, task_name, task_description, created_at, updated_at, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [uid, task_name, task_description, createdAtTimestamp, updatedAtTimestamp, status]);
     res.json(result.rows[0]);
   } catch (error) {
@@ -54,14 +66,14 @@ router.post('/', async (req, res) => {
  *           schema:
  *             type: object
  *             properties:
- *               uid:
- *                 type: integer
+ *               username:
+ *                 type: string
  *               task_name:
  *                 type: string
  *               task_description:
  *                 type: string
  *             example:
- *               uid: 1
+ *               username: JohnDoe
  *               task_name: Example Task
  *               task_description: This is an example task.
  *     responses:
@@ -94,6 +106,17 @@ router.post('/', async (req, res) => {
  *               created_at: 1677843540
  *               updated_at: 1677843540
  *               status: OPEN
+ *       404:
+ *         description: Username not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *             example:
+ *               error: Username not found.
  *       500:
  *         description: Internal server error
  *         content:
@@ -263,12 +286,19 @@ router.get('/', async (req, res) => {
  *               error: An error occurred while getting the tasks.
  */
 
-// Get tasks for a user
-router.get('/:uid', async (req, res) => {
-  const { uid } = req.params;
+// Get tasks for a user by username
+router.get('/tasks/:username', async (req, res) => {
+  const { username } = req.params;
 
   try {
-    const result = await client.query('SELECT taskid, task_name, task_description, status FROM tasks WHERE uid = $1 ORDER BY taskid ASC', [uid]);
+    // Assuming the 'name' column stores the username in the Users Table
+    const result = await client.query(
+      'SELECT t.taskid, t.task_name, t.task_description, t.status FROM tasks t ' +
+      'INNER JOIN users u ON t.uid = u.uid ' +
+      'WHERE u.name = $1 ORDER BY t.taskid ASC',
+      [username]
+    );
+
     res.json(result.rows);
   } catch (error) {
     console.error('Error getting tasks:', error);
@@ -278,18 +308,18 @@ router.get('/:uid', async (req, res) => {
 
 /**
  * @swagger
- * /mytime/tasks/{uid}:
+ * /mytime/tasks/{username}:
  *   get:
- *     summary: Get tasks for a specific user
+ *     summary: Get tasks for a specific user by username
  *     tags:
  *       - Tasks
  *     parameters:
  *       - in: path
- *         name: uid
+ *         name: username
  *         required: true
  *         schema:
- *           type: integer
- *         description: User ID
+ *           type: string
+ *         description: User's username
  *     responses:
  *       200:
  *         description: List of tasks for the user
