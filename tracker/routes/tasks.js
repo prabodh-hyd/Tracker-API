@@ -287,7 +287,7 @@ router.get('/', async (req, res) => {
  */
 
 // Get tasks for a user by username
-router.get('/tasks/:username', async (req, res) => {
+router.get('/:username', async (req, res) => {
   const { username } = req.params;
 
   try {
