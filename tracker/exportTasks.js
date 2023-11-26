@@ -50,7 +50,7 @@ async function exportTasksToCSV() {
 
         // Send the CSV file as an attachment using SendGrid
         const msg = {
-            to: 'adityaadiraju6@gmail.com',
+            to: 'aditya@prabodh.in',
             from: 'support@prabodh.in',
             subject: 'Task Export',
             text: 'Attached is the CSV file containing tasks and hours.',
